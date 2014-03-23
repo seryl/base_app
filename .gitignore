@@ -1,4 +1,9 @@
+.base_app.plt
+.eunit
 /deps
-/ebin
+/priv
+*.o
 *.beam
-
+/ebin
+/log
+/logs
