@@ -2,7 +2,11 @@
   {description, "Erlang generic application helpers"},
   {vsn, "0.0.1"},
   {registered, []},
-  {applications, [kernel, stdlib]},
+  {applications, [
+                 kernel,
+                 stdlib,
+                 lager
+  ]},
   {modules, [base_app]},
   {env, []}
 ]}.
