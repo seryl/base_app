@@ -1,5 +1,5 @@
 PROJECT = base_app
-REBAR = `which rebar || ./rebar`
+REBAR = $(shell which rebar || ./rebar)
 
 all: deps app
 
