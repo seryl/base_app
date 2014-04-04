@@ -1,6 +1,6 @@
 -module(base_app).
 
--export([load_config_file/2, load_config/2]).
+-export([load_config_file/2, load_config/2, get_pool/2]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -10,9 +10,9 @@
 %% Public API
 %% ===================================================================
 
-get_pool(Pool) ->
-  {ok, PoolList} = app_helper:get_env(pools),
-  lists:keyfind(Pool, 1, PoolList).
+get_pool(Application, Pool) ->
+  {ok, PoolList} = app_helper:get_env(Application, pools),
+  proplists:get_value(Pool, PoolList, undefined).
 
 load_config_file(Application, ConfigFile) ->
   {ok, Config} = file:read_file(ConfigFile),
@@ -42,8 +42,9 @@ base_app_test_() ->
       fun cleanup/1,
       [
        fun load_config_test_case/0,
+       %fun load_complex_config_test_case/0,
        fun override_config_test_case/0,
-       fun get_pool_test_case/0,
+       fun get_pool_test_case/0
       ]
     }.
 
@@ -62,10 +63,14 @@ load_config_test_case() ->
   ?assertEqual({ok, true}, application:get_env(base_app, enable_zk)),
   ?assertEqual({ok, "bob"}, application:get_env(base_app, user)).
 
-load_complex_config_test_case() ->
-  ["{\"name\":\"bob\",\"loc\":{\"city\":\"truckee\",",
-   "\"region\":\"tahoe\"},\"kids\":[\"joe\",\"sue\"]}"],
-
+%load_complex_config_test_case() ->
+%   JStr = iolist_to_binary(["{\"name\":\"bob\",\"loc\":{\"city\":\"truckee\",",
+%                            "\"region\":\"tahoe\"},\"kids\":[\"joe\",\"sue\"]}"]),
+%  load_config(base_app, JStr),
+%  ?assertEqual({ok, [{city, "truckee"}, {region, "tahoe"}]},
+%               application:get_env(base_app, loc)),
+%  ?assertEqual({ok, {kids, ["joe", "sue"]}},
+%               application:get_env(base_app, kids)).
 
 override_config_test_case() ->
   load_config(base_app, <<"{\"config_file\": \"/etc/app.json\"}">>),
@@ -73,17 +78,15 @@ override_config_test_case() ->
                application:get_env(base_app, config_file)).
 
 get_pool_test_case() ->
-  application:set_env(pools,
+  application:set_env(base_app, pools,
                       [ {cassandra,
                          [{size, 10},
                           {max_overflow, 20}
-                         ], [{nodes, "localhost"} ]}
+                         ], [{nodes, "localhost"}]}
                       ]),
-
-  Pool = get_pool(cassandra),
   ?assertEqual({cassandra,
                 [{size, 10},
                  {max_overflow, 20}
-                ], [{nodes, "localhost"} ]}, Pool).
+                ], [{nodes, "localhost"}]}, get_pool(base_app, cassandra)).
 
 -endif.
